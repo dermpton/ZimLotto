@@ -1,20 +1,37 @@
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const express = require('express');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
+const app = express();
+const path = require('path');
+const mongo = require('./lib/db');  // immediate execution
+const dotenv = require('dotenv').config();
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const mongoose = require('mongoose');
+const cors = require('cors');
+const userRouter = require('./routes/users');
+const gameRouter = require('./routes/games');
 
-var app = express();
+app.set('port', process.env.PORT || 3000);
 
-app.use(logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
+// Global Routes/Middleware before anything
+
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(cors()); //communication with different ports
+app.use(bodyParser.json()); // parse json in the request bodies
+// app.use(cookieParser); // session storage & management
 
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
-module.exports = app;
+// Based on the way I structure the code, I think
+// I'll add the routes and middleware using the module exports 
+
+app.get('/', (req, res)=>{
+    res.sendFile('index.html', {root: path.join(__dirname, 'public')});
+});
+
+app.use('/users',userRouter);
+app.use('/api', gameRouter);
+
+// Server related code 
+app.listen(app.get('port'), ()=>{
+    console.log(`Server started at http://localhost:${app.get('port')} press ctrl + c to exit`);
+});
